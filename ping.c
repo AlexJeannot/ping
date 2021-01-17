@@ -7,19 +7,39 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-unsigned short checksum(void *b, int len) 
-{    unsigned short *buf = b; 
-    unsigned int sum=0; 
-    unsigned short result; 
-  
-    for ( sum = 0; len > 1; len -= 2 ) 
-        sum += *buf++; 
-    if ( len == 1 ) 
-        sum += *(unsigned char*)buf; 
-    sum = (sum >> 16) + (sum & 0xFFFF); 
-    sum += (sum >> 16); 
-    result = ~sum; 
-    return result; 
+unsigned short calcul_checksum(void *data, int size) 
+{
+    unsigned long checksum;
+    unsigned short *addr;
+
+    checksum = 0;
+    addr = data;
+    while (size > 1)
+    {
+        printf(">> checksum = %lu\n", checksum);
+        checksum += *addr;
+        addr++;
+        size -= (int)sizeof(unsigned short);
+    }
+
+    if (size == 1)
+        checksum += *(unsigned char*)addr;
+
+    // printf("checksum = %lu\n", checksum);
+    // printf("checksum >> 16 = %lu\n", (checksum >> 16));
+    // printf("checksum & 0xFFFF = %lu\n", (checksum & 0xFFFF));
+
+    checksum = (checksum >> 16) + (checksum & 0xFFFF);
+
+    // printf("-------------\n");
+    // printf("checksum = %lu\n", checksum);
+    // printf("checksum >> 16 = %lu\n", (checksum >> 16));
+
+    checksum += (checksum >> 16);
+    checksum = ~checksum;
+
+    return ((unsigned short)checksum);
+
 }
 
 typedef struct icmp_header
@@ -91,8 +111,8 @@ int main()
         icmp.type = 8;
         icmp.code = 0;
 
-        icmp.id = 10;
-        icmp.sequence = 0;
+        icmp.id = (uint16_t)65000;
+        icmp.sequence = 65000;
 
 
 
@@ -106,7 +126,7 @@ int main()
         printf("sizeof(time_t) = %lu\n", sizeof(time_t));
 
 
-        icmp.checksum = checksum(&icmp, sizeof(icmp));
+        icmp.checksum = calcul_checksum(&icmp, sizeof(icmp));
 
         printf("sizeof(icmp) = %lu\n", sizeof(icmp));
         printf("sizeof(res->ai_addr) = %lu\n", sizeof(res->ai_addr));
