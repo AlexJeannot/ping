@@ -20,19 +20,18 @@ void setup_icmp_req(t_env *env)
 
 void set_reception_struct(t_env *env)
 {
-    bzero(&(env->r_data.databuf), sizeof(env->r_data.databuf));
     env->r_data.msg.msg_name = env->addr->ai_addr;
     env->r_data.msg.msg_namelen = env->addr->ai_addrlen;
-    env->r_data.iov[0].iov_base = &(env->r_data.databuf);
+    env->r_data.iov[0].iov_base = &(env->r_data.databuf[0]);
     env->r_data.iov[0].iov_len = sizeof(env->r_data.databuf);
     env->r_data.msg.msg_iov = env->r_data.iov;
     env->r_data.msg.msg_iovlen = 1;
-    env->r_data.msg.msg_control = &(env->r_data.datacontrol);
+    env->r_data.msg.msg_control = &(env->r_data.datacontrol[0]);
     env->r_data.msg.msg_controllen = sizeof(env->r_data.datacontrol);
     env->r_data.msg.msg_flags = 0;
 }
 
-void retrieve_ip_info(unsigned const char* data, t_ip_header *res)
+void retrieve_ip_info(const char* data, t_ip_header *res)
 {
     int offset;
     int count;
@@ -127,7 +126,7 @@ void retrieve_ip_info(unsigned const char* data, t_ip_header *res)
     printf("offset = %d\n", offset);
 }
 
-void retrieve_icmp_info(unsigned char* data, t_icmp_header *res, int size)
+void retrieve_icmp_info(const char* data, t_icmp_header *res, int size)
 {
     int offset;
     int count;
@@ -151,6 +150,20 @@ void retrieve_icmp_info(unsigned char* data, t_icmp_header *res, int size)
         res->seq = (uint8_t)data[offset++];
         res->seq = (res->seq << 8);
         res->seq += (uint8_t)data[offset++];
+
+
+        // int s_offset = offset;
+        // for (int c = 0; c < 20; c++)
+        // {
+        //     for (int i = 7; i >= 0; i--)
+        //         printf("%d", ((data[offset] >> i) & 1));
+        //     printf("  ");
+        //     if (c % 7 == 0 && c != 0)
+        //         printf("\n");
+        //     offset++;
+        // }
+
+        // offset = s_offset;
 
         while (offset < size)
             res->data[count++] = (char)data[offset++];

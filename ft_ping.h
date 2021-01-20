@@ -11,6 +11,13 @@
 #include <sys/time.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include <signal.h>
+
+typedef struct s_args
+{
+    int verbose;
+    char *hostname;
+} t_args;
 
 typedef struct s_ip_header
 {
@@ -44,14 +51,16 @@ typedef struct s_reception
 {
     struct msghdr msg;
     struct iovec iov[1];
-    unsigned char databuf[1000];
-    unsigned char datacontrol[1000];
+    char databuf[1000];
+    char datacontrol[1000];
 } t_reception;
 
 typedef struct s_env
 {
     int sockfd;
     int ttl;
+    int pause;
+    t_args args;
     struct addrinfo *addr;
     t_ip_header ip_res;
     t_icmp_header icmp_req;
@@ -62,7 +71,7 @@ typedef struct s_env
     long double interval;
 } t_env;
 
-
+t_env env;
 
 void setup_socket(t_env *env);
 void error_exit(char *error_msg);
@@ -70,13 +79,13 @@ long get_ts_s(void);
 long double get_ts_ms(void);
 void setup_icmp_req(t_env *env);
 uint16_t calcul_checksum(void *data, int size);
-void retrieve_icmp_info(unsigned char* data, t_icmp_header *response, int size);
+void retrieve_icmp_info(const char* data, t_icmp_header *response, int size);
 void display_addr_error(int error_code);
 void get_addr(t_env *env);
 void display_addr_info(struct addrinfo *addr);
 void set_reception_struct(t_env *env);
 void display_icmp_header_info(t_icmp_header header, char *name);
-void retrieve_ip_info(const unsigned char* data, t_ip_header *res);
+void retrieve_ip_info(const char* data, t_ip_header *res);
 void display_ip_header_info(t_ip_header header, char *name);
 
 #endif
