@@ -1,7 +1,7 @@
 # VARIABLES
 
 NAME = ft_ping
-CC = gcc -g -Wall -Wextra -Werror -fsanitize=address
+CC = gcc -g -Wall -Wextra -Werror
 RM = rm -rf
 
 # DIRECTORIES
