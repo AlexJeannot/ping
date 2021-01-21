@@ -73,28 +73,53 @@ void signal_handler(int code)
         env.pause = 0;
 }
 
+int error_control()
+{
+    if (env.icmp_res.type == 3 || env.icmp_res.type == 11)
+        return (1);
+    return (0);
+}
+
+void display_error()
+{
+    t_ip_header ip_header;
+    char *dest_error_code[16] = {"Destination network unreachable", "Destination host unreachable" \
+                                "Destination protocol unreachable", "Destination port unreachable" \
+                                "Fragmentation required", "Source route failed", "Destination network unknown" \
+                                "Destination host unknown", "Source host isolated", "Network administratively prohibited" \
+                                "Host administratively prohibited", "Network unreachable for ToS", \
+                                "Host unreachable for ToS", "Communication administratively prohibited", \
+                                "Host Precedence Violation", "Precedence cutoff in effect"};
+    char *ttl_error_code[2] = {"Time To Live exceeded", "Fragment reassembly time exceeded"};
+    char *error_msg;
+
+    retrieve_ip_info(&(env.icmp_res.data[0]), &(ip_header));
+    display_ip_header_info(ip_header, "ERROR");
+
+    char src[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(env.r_data.r_addr.sin_addr), src, INET_ADDRSTRLEN);
+    printf("STP = %s\n", src);
+
+    error_msg = (env.icmp_res.type == 3) ? dest_error_code[env.icmp_res.code] : ttl_error_code[env.icmp_res.code];
+    printf("From %s icmp_seq=%d %s\n", "TEST", env.icmp_res.seq, error_msg);
+}
+
 
 int main(int argc, char** argv)
 {
     bzero(&env, sizeof(env));
-    env.ttl = 64;
+    env.ttl = 0;
 
     verify_args(argc, argv, &env);
 
-
-
-
     get_addr(&env);
-
 
     display_addr_info(env.addr);
     signal(SIGALRM, &signal_handler);
 
     setup_socket(&env);
 
-
     setup_icmp_req(&env);
-
 
     set_reception_struct(&env);
 
@@ -102,7 +127,7 @@ int main(int argc, char** argv)
     {
         env.ts_before = get_ts_ms();
 
-        int retsend = sendto(env.sockfd, &(env.icmp_req), sizeof(env.icmp_req), 0, (env.addr->ai_addr), sizeof(env.addr->ai_addr));
+        int retsend = sendto(env.sockfd, &(env.icmp_req), sizeof(env.icmp_req), 0, (env.addr->ai_addr), env.addr->ai_addrlen);
 
         printf("retsend = %d\n", retsend);
 
@@ -111,22 +136,33 @@ int main(int argc, char** argv)
         int retrecv = recvmsg(env.sockfd, &(env.r_data.msg), MSG_WAITALL);
 
         printf("retrecv = %d\n", retrecv);
+        if (retrecv == -1)
+            perror("Error recv: ");
 
         env.ts_after = get_ts_ms();
 
 
         retrieve_ip_info(&(env.r_data.databuf[0]), &(env.ip_res));
-        // display_ip_header_info(env.ip_res, "REPONSE");
+        display_ip_header_info(env.ip_res, "REPONSE");
 
-        retrieve_icmp_info(&(env.r_data.databuf[20]), &(env.icmp_res), retrecv);
-        // display_icmp_header_info(env.icmp_res, "RESPONSE");
+        printf("offset = %d\n", (env.ip_res.header_size * 4));
+        retrieve_icmp_info(&(env.r_data.databuf[env.ip_res.header_size * 4]), &(env.icmp_res), retrecv);
+        display_icmp_header_info(env.icmp_res, "RESPONSE");
+
+        printf("env.r_data.msg.msg_name = %p\n", env.r_data.msg.msg_name);
+
+        char src[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(env.r_data.r_addr.sin_addr), src, INET_ADDRSTRLEN);
+        printf("STP = %s\n", src);
 
         env.interval = (env.ts_after - env.ts_before);
         printf("ping interval = %Lf\n", env.interval);
         env.icmp_req.seq++;
         bzero(&(env.icmp_req.checksum), sizeof(env.icmp_req.checksum));
         env.icmp_req.checksum = calcul_checksum(&(env.icmp_req), sizeof(env.icmp_req));
-        bzero(&(env.r_data), sizeof(env.r_data));
+        set_reception_struct(&env);
+        if (error_control())
+            display_error();
         while (env.pause) ;
     }
 

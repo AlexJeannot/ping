@@ -37,6 +37,8 @@ typedef struct s_ip_header
 
 } t_ip_header;
 
+
+
 typedef struct s_icmp_header
 {
     uint8_t type;
@@ -49,10 +51,11 @@ typedef struct s_icmp_header
 
 typedef struct s_reception
 {
+    struct sockaddr_in r_addr;
     struct msghdr msg;
-    struct iovec iov[1];
-    char databuf[1000];
-    char datacontrol[1000];
+    struct iovec iov;
+    char databuf[1024];
+    char datacontrol[1024];
 } t_reception;
 
 typedef struct s_env
@@ -70,6 +73,11 @@ typedef struct s_env
     long double ts_after;
     long double interval;
 } t_env;
+
+typedef struct s_error_code_dest
+{
+
+} t_s_error_code_dest;
 
 t_env env;
 
