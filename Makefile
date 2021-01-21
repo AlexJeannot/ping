@@ -1,7 +1,7 @@
 # VARIABLES
 
 NAME = ft_ping
-CC = clang++ -g -Wall -Wextra -Werror -fsanitize=address
+CC = gcc -g -Wall -Wextra -Werror -fsanitize=address
 RM = rm -rf
 
 # DIRECTORIES
@@ -11,10 +11,10 @@ DSRCS	= ./srcs/
 DOBJS	= ./comp/
 
 
-HEADERS = ./inc/*
+HEADERS = ft_ping.h
 # SOURCES
 
-SRCS = ft_ping.c ft_ping.h network.c data.c annexes.c
+SRCS = ft_ping.c network.c data.c annexes.c
 OBJS = $(SRCS:%.cpp=$(DOBJS)%.o)
 
 
@@ -36,6 +36,9 @@ $(DOBJS):
 
 $(DOBJS)%.o: $(DSRCS)%.cpp
 	$(CC) -c $< -o $@
+
+test: all
+		sudo ./ft_ping "8.8.8.8"
 
 # CLEAR
 
