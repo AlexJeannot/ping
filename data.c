@@ -1,35 +1,35 @@
 #include "ft_ping.h"
 
-void setup_icmp_req(t_env *env)
+void set_icmp_req(void)
 {
     long ts;
     short pos_bytes;
 
-    env->icmp_req.type = 8;
-    env->icmp_req.id = (uint16_t)getpid();
+    env.icmp_req.type = 8;
+    env.icmp_req.id = (uint16_t)getpid();
 
     pos_bytes = 7;
     ts = get_ts_s();
     while (pos_bytes >= 0)
     {
-        env->icmp_req.data[pos_bytes] = (ts >> (pos_bytes * 8) & 0xFF);
+        env.icmp_req.data[pos_bytes] = (ts >> (pos_bytes * 8) & 0xFF);
         pos_bytes--;
     }
-    env->icmp_req.checksum = calcul_checksum(&(env->icmp_req), sizeof(env->icmp_req));
+    env.icmp_req.checksum = calcul_checksum(&(env.icmp_req), sizeof(env.icmp_req));
 }
 
-void set_reception_struct(t_env *env)
+void set_reception_struct(void)
 {
-    bzero(&(env->r_data), sizeof(env->r_data));
-    env->r_data.msg.msg_name = &(env->r_data.s_addr_in);
-    env->r_data.msg.msg_namelen = sizeof(env->r_data.s_addr_in);
-    env->r_data.iov.iov_base = &(env->r_data.m_data[0]);
-    env->r_data.iov.iov_len = sizeof(env->r_data.m_data);
-    env->r_data.msg.msg_iov = &(env->r_data.iov);
-    env->r_data.msg.msg_iovlen = 1;
-    env->r_data.msg.msg_control = &(env->r_data.a_data[0]);
-    env->r_data.msg.msg_controllen = sizeof(env->r_data.a_data);
-    env->r_data.msg.msg_flags = 0;
+    bzero(&(env.r_data), sizeof(env.r_data));
+    env.r_data.msg.msg_name = &(env.r_data.s_addr_in);
+    env.r_data.msg.msg_namelen = sizeof(env.r_data.s_addr_in);
+    env.r_data.iov.iov_base = &(env.r_data.m_data[0]);
+    env.r_data.iov.iov_len = sizeof(env.r_data.m_data);
+    env.r_data.msg.msg_iov = &(env.r_data.iov);
+    env.r_data.msg.msg_iovlen = 1;
+    env.r_data.msg.msg_control = &(env.r_data.a_data[0]);
+    env.r_data.msg.msg_controllen = sizeof(env.r_data.a_data);
+    env.r_data.msg.msg_flags = 0;
 }
 
 void retrieve_ip_info(const char* data, t_ip_header *res)

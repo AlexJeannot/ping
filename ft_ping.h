@@ -12,10 +12,13 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <signal.h>
+#include "./libft/libft.h"
 
 typedef struct s_args
 {
+    char error_msg[1024];
     int verbose;
+    int ttl;
     char *hostname;
 } t_args;
 
@@ -72,6 +75,9 @@ typedef struct s_env
     long double ts_before;
     long double ts_after;
     int r_ttl;
+    float interval_min;
+    float interval_max;
+
 } t_env;
 
 typedef struct s_error_code_dest
@@ -81,24 +87,25 @@ typedef struct s_error_code_dest
 
 t_env env;
 
-void setup_socket(t_env *env);
+void set_socket(void);
 void error_exit(char *error_msg);
 long get_ts_s(void);
 long double get_ts_ms(void);
-void setup_icmp_req(t_env *env);
+void set_icmp_req(void);
 uint16_t calcul_checksum(void *data, int size);
 void retrieve_icmp_info(const char* data, t_icmp_header *response, int size);
 void display_addr_error(int error_code);
-void get_addr(t_env *env);
+void get_addr(void);
 void display_addr_info(struct addrinfo *addr);
-void set_reception_struct(t_env *env);
+void set_reception_struct(void);
 void display_icmp_header_info(t_icmp_header header, char *name);
 void retrieve_ip_info(const char* data, t_ip_header *res);
 void display_ip_header_info(t_ip_header header, char *name);
-
+void parse_args(int argc, char **argv);
 void display_help(int exit_code);
 void display_wrong_option(char option);
 void display_error();
 void display_ping(int bytes);
+void display_summary(void);
 
 #endif

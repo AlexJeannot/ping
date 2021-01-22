@@ -39,3 +39,10 @@ void display_ping(int bytes)
     interval = (env.ts_after - env.ts_before);
     printf("%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3Lf ms\n", bytes, env.r_data.s_host, env.r_data.s_addr, env.icmp_req.seq, env.r_ttl, interval);
 }
+
+void display_summary(void)
+{
+    printf("\n--- %s ping statistics ---\n", env.args.hostname);
+    printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", 1.1, 2.2, 3.3, 4.4);
+    exit(0);
+}
