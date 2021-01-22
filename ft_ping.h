@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <errno.h>
-#include <strings.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <stdlib.h>

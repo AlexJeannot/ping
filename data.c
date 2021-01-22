@@ -20,7 +20,8 @@ void setup_icmp_req(t_env *env)
 
 void set_reception_struct(t_env *env)
 {
-    bzero(&(env->r_data.r_addr), sizeof(env->r_data.r_addr));
+    // bzero(&(env->r_data.r_addr), sizeof(env->r_data.r_addr));
+    memset(&(env->r_data.r_addr), 0, sizeof(env->r_data.r_addr));
     env->r_data.msg.msg_name = &(env->r_data.r_addr);
     env->r_data.msg.msg_namelen = sizeof(env->r_data.r_addr);
     env->r_data.iov.iov_base = &(env->r_data.databuf[0]);
@@ -165,8 +166,11 @@ void retrieve_icmp_info(const char* data, t_icmp_header *res, int size)
 
         // offset = s_offset;
 
-        while (offset < size)
-            res->data[count++] = (char)data[offset++];
+        // printf("size = %d\n", size);
+        // while (offset < size)
+        //     res->data[count++] = (char)data[offset++];
+        // printf("count = %d\n", count);
+
     }
 }
 

@@ -50,9 +50,9 @@ void display_icmp_header_info(t_icmp_header header, char *name)
 
 void display_ip_header_info(t_ip_header header, char *name)
 {
-    size_t size;
+    // size_t size;
 
-    size = sizeof(header) - 8;
+    // size = sizeof(header) - 8;
     printf("\n=================== DISPLAY IP %s ===================\n", name);
     printf("version = %u\n", header.version);
     printf("header_size = %u\n", header.header_size);
