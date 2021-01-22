@@ -22,47 +22,15 @@ uint16_t calcul_checksum(void *data, int size)
     return ((uint16_t)checksum);
 }
 
-
-void verify_args(int argc, char **argv, t_env *env)
-{
-    int pos;
-    int count;
-
-    pos = 1;
-    count = 0;
-    if (argc < 2)
-        display_help(1);
-    while (pos < argc)
-    {
-        if (argv[pos][count] == '-' && argv[pos][count + 1])
-        {
-            while (argv[pos][++count])
-            {
-                if (argv[pos][count] == 'v')
-                    env->args.verbose = 1;
-                else if (argv[pos][count] == 'h')
-                    display_help(0);
-                else
-                    display_wrong_option(argv[pos][count]);
-            }
-        }
-        else
-        {
-            if (env->args.hostname)
-                display_help(1);
-            env->args.hostname = argv[pos];
-        }
-        pos++;
-    }
-}
-
 void signal_handler(int code)
 {
     if (code == SIGALRM)
         env.timeout = 0;
+    if (code == SIGINT || code == SIGQUIT)
+        display_summary();
 }
 
-void retrieve_info()
+void retrieve_info(void)
 {
     // struct sock_extended_err *pkt;
     int *ttl;
@@ -72,7 +40,8 @@ void retrieve_info()
     ttl = NULL;
     cmsg = CMSG_FIRSTHDR(&(env.r_data.msg));
 
-    getnameinfo(env.r_data.msg.msg_name, env.r_data.msg.msg_namelen, &env.r_data.s_host[0], sizeof(env.r_data.s_host), NULL, 0, 0);
+    if (getnameinfo(env.r_data.msg.msg_name, env.r_data.msg.msg_namelen, &env.r_data.s_host[0], sizeof(env.r_data.s_host), NULL, 0, 0) != 0)
+        ft_strlcpy(&(env.r_data.s_host[0]), "N/A", 3);
 
     inet_ntop(AF_INET, &(env.r_data.s_addr_in.sin_addr), env.r_data.s_addr, INET_ADDRSTRLEN);
 
@@ -107,51 +76,47 @@ void retrieve_info()
     // }
 }
 
+void set_timeout_and_ts(void)
+{
+    alarm(1);
+    env.timeout = 1;
+    env.ts_before = get_ts_ms();
+}
+
+void set_next_ping(void)
+{
+    env.icmp_req.seq++;
+    bzero(&env.ts_before, sizeof(env.ts_before));
+    bzero(&env.ts_after, sizeof(env.ts_after));
+    bzero(&(env.icmp_req.checksum), sizeof(env.icmp_req.checksum));
+    env.icmp_req.checksum = calcul_checksum(&(env.icmp_req), sizeof(env.icmp_req));
+    set_reception_struct();
+}
+
+void manage_signal(void)
+{
+    signal(SIGALRM, &signal_handler);
+    signal(SIGINT, &signal_handler);
+    signal(SIGQUIT, &signal_handler);
+}
 
 int main(int argc, char** argv)
 {
     bzero(&env, sizeof(env));
-    env.ttl = 64;
-
-    verify_args(argc, argv, &env);
-
-    get_addr(&env);
-
+    parse_args(argc, argv);
+    get_addr();
     display_addr_info(env.addr);
-    signal(SIGALRM, &signal_handler);
-
-    setup_socket(&env);
-
-    setup_icmp_req(&env);
-
-    set_reception_struct(&env);
+    manage_signal();
+    set_socket();
+    set_icmp_req();
+    set_reception_struct();
 
     while (1)
     {
-        alarm(1);
-        env.timeout = 1;
-        env.ts_before = get_ts_ms();
-
+        set_timeout_and_ts();
         int retsend = sendto(env.sockfd, &(env.icmp_req), sizeof(env.icmp_req), 0, (env.addr->ai_addr), env.addr->ai_addrlen);
-
         printf("retsend = %d\n", retsend);
-
         int retrecv = recvmsg(env.sockfd, &(env.r_data.msg), MSG_WAITALL);
-
-        // printf("\n\n==================================\n\n");
-        // int offset;
-
-        // offset = 0;
-        // for (int c = 0; c < retrecv; c++)
-        // {
-        //     for (int i = 7; i >= 0; i--)
-        //         printf("%d", ((env.r_data.m_data[offset] >> i) & 1));
-        //     printf("  ");
-        //     if ((c + 1) % 8 == 0)
-        //         printf("\n");
-        //     offset++;
-        // }
-        // printf("\n\n==================================\n\n");
 
         printf("retrecv = %d\n", retrecv);
         if (retrecv == -1)
@@ -159,31 +124,13 @@ int main(int argc, char** argv)
 
         env.ts_after = get_ts_ms();
 
-
-
         retrieve_ip_info(&(env.r_data.m_data[0]), &(env.ip_res));
-        // display_ip_header_info(env.ip_res, "REPONSE");
-
         retrieve_icmp_info(&(env.r_data.m_data[env.ip_res.header_size * 4]), &(env.icmp_res), (retrecv - (env.ip_res.header_size * 4)));
 
         retrieve_info();
-        // printf("ping interval = %Lf\n", env.interval);
         display_ping((retrecv - (env.ip_res.header_size * 4)));
-
-        env.icmp_req.seq++;
-        // bezro ts
-        // bzero(&env.ts_before, sizeof(env.ts_before));
-        // bzero(&env.ts_after, sizeof(env.ts_after));
-        bzero(&(env.icmp_req.checksum), sizeof(env.icmp_req.checksum));
-        env.icmp_req.checksum = calcul_checksum(&(env.icmp_req), sizeof(env.icmp_req));
-        set_reception_struct(&env);
+        set_next_ping();
         while (env.timeout) ;
     }
-
-
-
-
     return (0);
-
-
 }
