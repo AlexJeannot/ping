@@ -1,7 +1,7 @@
 # VARIABLES
 
 NAME = ft_ping
-CC = gcc -g -Wall -Wextra -Werror
+CC = gcc -Wall -Wextra -Werror
 RM = rm -rf
 
 # DIRECTORIES
@@ -14,7 +14,7 @@ DOBJS	= ./comp/
 HEADERS = ft_ping.h
 # SOURCES
 
-SRCS = ft_ping.c network.c data.c annexes.c
+SRCS = ft_ping.c network.c data.c annexes.c display.c error.c
 OBJS = $(SRCS:%.cpp=$(DOBJS)%.o)
 
 
@@ -37,7 +37,7 @@ $(DOBJS):
 $(DOBJS)%.o: $(DSRCS)%.cpp
 	$(CC) -c $< -o $@
 
-test: all
+test: re
 		sudo ./ft_ping "8.8.8.8"
 
 # CLEAR

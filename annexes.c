@@ -1,11 +1,5 @@
 #include "ft_ping.h"
 
-void display_addr_error(int error_code)
-{
-    printf("ERROR = %d\n", error_code);
-    exit(1);
-}
-
 void display_addr_info(struct addrinfo *addr)
 {
     int count;
@@ -50,9 +44,6 @@ void display_icmp_header_info(t_icmp_header header, char *name)
 
 void display_ip_header_info(t_ip_header header, char *name)
 {
-    // size_t size;
-
-    // size = sizeof(header) - 8;
     printf("\n=================== DISPLAY IP %s ===================\n", name);
     printf("version = %u\n", header.version);
     printf("header_size = %u\n", header.header_size);
@@ -72,12 +63,6 @@ void display_ip_header_info(t_ip_header header, char *name)
     write(1, "\n\n", 2);
 }
 
-void error_exit(char *error_msg)
-{
-    printf("Error exit: %s\n", error_msg);
-    exit(1);
-}
-
 long get_ts_s(void)
 {
     struct timeval tv;
@@ -94,4 +79,11 @@ long double get_ts_ms(void)
 
     gettimeofday(&tv, &tz);
     return (((long double)tv.tv_sec * 1000) + ((long double)tv.tv_usec / 1000));
+}
+
+void set_time()
+{
+    alarm(1);
+    env.timeout = 1;
+    env.ts_before = get_ts_ms();
 }

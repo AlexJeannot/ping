@@ -37,8 +37,6 @@ typedef struct s_ip_header
 
 } t_ip_header;
 
-
-
 typedef struct s_icmp_header
 {
     uint8_t type;
@@ -51,18 +49,20 @@ typedef struct s_icmp_header
 
 typedef struct s_reception
 {
-    struct sockaddr_in r_addr;
     struct msghdr msg;
     struct iovec iov;
-    char databuf[1024];
-    char datacontrol[1024];
+    char m_data[1024]; // main data
+    char a_data[1024]; // ancillary data
+    struct sockaddr_in s_addr_in;
+    char s_addr[INET_ADDRSTRLEN];
+    char s_host[1024];
 } t_reception;
 
 typedef struct s_env
 {
     int sockfd;
     int ttl;
-    int pause;
+    int timeout;
     t_args args;
     struct addrinfo *addr;
     t_ip_header ip_res;
@@ -71,7 +71,7 @@ typedef struct s_env
     t_reception r_data;
     long double ts_before;
     long double ts_after;
-    long double interval;
+    int r_ttl;
 } t_env;
 
 typedef struct s_error_code_dest
@@ -95,5 +95,10 @@ void set_reception_struct(t_env *env);
 void display_icmp_header_info(t_icmp_header header, char *name);
 void retrieve_ip_info(const char* data, t_ip_header *res);
 void display_ip_header_info(t_ip_header header, char *name);
+
+void display_help(int exit_code);
+void display_wrong_option(char option);
+void display_error();
+void display_ping(int bytes);
 
 #endif

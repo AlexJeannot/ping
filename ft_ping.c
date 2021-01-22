@@ -22,17 +22,6 @@ uint16_t calcul_checksum(void *data, int size)
     return ((uint16_t)checksum);
 }
 
-void display_help(int exit_code)
-{
-    printf("HELP TO DO");
-    exit(exit_code);
-}
-
-void display_wrong_option(char option)
-{
-    printf("Ping: invalid option -- '%c'\n", option);
-    display_help(1);
-}
 
 void verify_args(int argc, char **argv, t_env *env)
 {
@@ -70,84 +59,59 @@ void verify_args(int argc, char **argv, t_env *env)
 void signal_handler(int code)
 {
     if (code == SIGALRM)
-        env.pause = 0;
+        env.timeout = 0;
 }
 
-// int error_control()
-// {
-//     if (env.icmp_res.type == 3 || env.icmp_res.type == 11)
-//         return (1);
-//     return (0);
-// }
-
-void error_control()
+void retrieve_info()
 {
-    struct cmsghdr *control;
-    struct sock_extended_err *pkt;
+    // struct sock_extended_err *pkt;
     int *ttl;
+    struct cmsghdr *cmsg;
 
+    bzero(&(cmsg), sizeof(cmsg));
     ttl = NULL;
-    control = CMSG_FIRSTHDR(&(env.r_data.msg));
-    printf("AVANT WHILE\n");
-    printf("control->cmsg_level = %d ----- control->cmsg_type = %d\n", control->cmsg_level, control->cmsg_type);
-    while (control)
+    cmsg = CMSG_FIRSTHDR(&(env.r_data.msg));
+
+    getnameinfo(env.r_data.msg.msg_name, env.r_data.msg.msg_namelen, &env.r_data.s_host[0], sizeof(env.r_data.s_host), NULL, 0, 0);
+
+    inet_ntop(AF_INET, &(env.r_data.s_addr_in.sin_addr), env.r_data.s_addr, INET_ADDRSTRLEN);
+
+
+    printf("cmsg->cmsg_level = %d ----- cmsg->cmsg_type = %d\n", cmsg->cmsg_level, cmsg->cmsg_type);
+    while (cmsg)
     {
-        printf("WHILE\n");
-        if (control->cmsg_level == IPPROTO_IP && control->cmsg_type == IP_RECVTTL)
+        printf("cmsg->cmsg_level = %d ----- cmsg->cmsg_type = %d\n", cmsg->cmsg_level, cmsg->cmsg_type);
+        if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_RECVTTL)
         {
-            printf("PASSE IF\n");
-            ttl = ((int *)CMSG_DATA(control));
+            ttl = ((int *)CMSG_DATA(cmsg));
         }
-        if (control->cmsg_level == IPPROTO_IP && control->cmsg_type == IP_RECVERR)
-        {
-            printf("PASSE IF\n");
-            pkt = ((struct sock_extended_err *)CMSG_DATA(control));
-        }
-        control = CMSG_NXTHDR(&(env.r_data.msg), control);
+        //TODO ON LINUX
+        // if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_RECVERR)
+        // {
+        //     pkt = ((struct sock_extended_err *)CMSG_DATA(cmsg));
+        // }
+        cmsg = CMSG_NXTHDR(&(env.r_data.msg), cmsg);
     }
     if (ttl)
-        printf("TTL = %d\n", *ttl);
-    if (pkt)
-    {
-        printf ("ee_errno = %d", pkt->ee_errno);
-        printf ("ee_origin = %d", pkt->ee_origin);
-        printf ("ee_type = %d", pkt->ee_type);
-        printf ("ee_code = %d", pkt->ee_code);
-        printf ("ee_pad = %d", pkt->ee_pad);
-        printf ("ee_info = %d", pkt->ee_info);
-        printf ("ee_data = %d", pkt->ee_data);
-    }
-}
-
-void display_error()
-{
-    t_ip_header ip_header;
-    char *dest_error_code[16] = {"Destination network unreachable", "Destination host unreachable" \
-                                "Destination protocol unreachable", "Destination port unreachable" \
-                                "Fragmentation required", "Source route failed", "Destination network unknown" \
-                                "Destination host unknown", "Source host isolated", "Network administratively prohibited" \
-                                "Host administratively prohibited", "Network unreachable for ToS", \
-                                "Host unreachable for ToS", "Communication administratively prohibited", \
-                                "Host Precedence Violation", "Precedence cutoff in effect"};
-    char *ttl_error_code[2] = {"Time To Live exceeded", "Fragment reassembly time exceeded"};
-    char *error_msg;
-
-    retrieve_ip_info(&(env.icmp_res.data[0]), &(ip_header));
-    display_ip_header_info(ip_header, "ERROR");
-
-    char src[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &(env.r_data.r_addr.sin_addr), src, INET_ADDRSTRLEN);
-    printf(">>>>>>>>>>>>>>>>>>> SRC ADRESS = %s\n", src);
-
-    error_msg = (env.icmp_res.type == 3) ? dest_error_code[env.icmp_res.code] : ttl_error_code[env.icmp_res.code];
-    printf("From %s icmp_seq=%d %s\n", "TEST", env.icmp_res.seq, error_msg);
+        env.r_ttl = *ttl;
+    //TODO ON LINUX
+    // if (pkt)
+    // {
+    //     printf ("ee_errno = %d", pkt->ee_errno);
+    //     printf ("ee_origin = %d", pkt->ee_origin);
+    //     printf ("ee_type = %d", pkt->ee_type);
+    //     printf ("ee_code = %d", pkt->ee_code);
+    //     printf ("ee_pad = %d", pkt->ee_pad);
+    //     printf ("ee_info = %d", pkt->ee_info);
+    //     printf ("ee_data = %d", pkt->ee_data);
+    // }
 }
 
 
 int main(int argc, char** argv)
 {
     bzero(&env, sizeof(env));
-    env.ttl = 0;
+    env.ttl = 64;
 
     verify_args(argc, argv, &env);
 
@@ -164,19 +128,30 @@ int main(int argc, char** argv)
 
     while (1)
     {
+        alarm(1);
+        env.timeout = 1;
         env.ts_before = get_ts_ms();
 
         int retsend = sendto(env.sockfd, &(env.icmp_req), sizeof(env.icmp_req), 0, (env.addr->ai_addr), env.addr->ai_addrlen);
 
         printf("retsend = %d\n", retsend);
 
-        alarm(1);
-        env.pause = 1;
         int retrecv = recvmsg(env.sockfd, &(env.r_data.msg), MSG_WAITALL);
 
-        // char src[INET_ADDRSTRLEN];
-        // inet_ntop(AF_INET, &(env.r_data.r_addr.sin_addr), src, INET_ADDRSTRLEN);
-        // printf("STP = %s\n", src);
+        // printf("\n\n==================================\n\n");
+        // int offset;
+
+        // offset = 0;
+        // for (int c = 0; c < retrecv; c++)
+        // {
+        //     for (int i = 7; i >= 0; i--)
+        //         printf("%d", ((env.r_data.m_data[offset] >> i) & 1));
+        //     printf("  ");
+        //     if ((c + 1) % 8 == 0)
+        //         printf("\n");
+        //     offset++;
+        // }
+        // printf("\n\n==================================\n\n");
 
         printf("retrecv = %d\n", retrecv);
         if (retrecv == -1)
@@ -184,58 +159,26 @@ int main(int argc, char** argv)
 
         env.ts_after = get_ts_ms();
 
-        // char src[INET_ADDRSTRLEN];
-        // inet_ntop(AF_INET, &(env.r_data.r_addr.sin_addr), src, INET_ADDRSTRLEN);
-        // printf(">>>>>>>>>>>>>>>>>>> SRC ADRESS = %s\n", src);
 
-        retrieve_ip_info(&(env.r_data.databuf[0]), &(env.ip_res));
-        display_ip_header_info(env.ip_res, "REPONSE");
 
-        // char src[INET_ADDRSTRLEN];
-        // inet_ntop(AF_INET, &(env.r_data.r_addr.sin_addr), src, INET_ADDRSTRLEN);
-        // printf(">>>>>>>>>>>>>>>>>>> SRC ADRESS = %s\n", src);
+        retrieve_ip_info(&(env.r_data.m_data[0]), &(env.ip_res));
+        // display_ip_header_info(env.ip_res, "REPONSE");
 
-        printf("offset = %d\n", (env.ip_res.header_size * 4));
-        retrieve_icmp_info(&(env.r_data.databuf[env.ip_res.header_size * 4]), &(env.icmp_res), (retrecv - (env.ip_res.header_size * 4)));
-        // display_icmp_header_info(env.icmp_res, "RESPONSE");
+        retrieve_icmp_info(&(env.r_data.m_data[env.ip_res.header_size * 4]), &(env.icmp_res), (retrecv - (env.ip_res.header_size * 4)));
 
-        char src[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &(env.r_data.r_addr.sin_addr), src, INET_ADDRSTRLEN);
-        printf(">>>>>>>>>>>>>>>>>>> SRC ADRESS = %s\n", src);
+        retrieve_info();
+        // printf("ping interval = %Lf\n", env.interval);
+        display_ping((retrecv - (env.ip_res.header_size * 4)));
 
-        printf("env.r_data.msg.msg_name = %p\n", env.r_data.msg.msg_name);
-
-        // if (error_control())
-        //     display_error();
-        error_control();
-        env.interval = (env.ts_after - env.ts_before);
-        printf("ping interval = %Lf\n", env.interval);
         env.icmp_req.seq++;
+        // bezro ts
+        // bzero(&env.ts_before, sizeof(env.ts_before));
+        // bzero(&env.ts_after, sizeof(env.ts_after));
         bzero(&(env.icmp_req.checksum), sizeof(env.icmp_req.checksum));
         env.icmp_req.checksum = calcul_checksum(&(env.icmp_req), sizeof(env.icmp_req));
         set_reception_struct(&env);
-        while (env.pause) ;
+        while (env.timeout) ;
     }
-
-    // struct cmsghdr *cmhdr;
-    // unsigned char tos;
-    // cmhdr = CMSG_FIRSTHDR(&env.r_data.msg);
-    // while (cmhdr) {
-    //     if (cmhdr->cmsg_level == IPPROTO_IP && cmhdr->cmsg_type == IP_TOS) {
-    //         // read the TOS byte in the IP header
-    //         tos = ((unsigned char *)CMSG_DATA(cmhdr))[0];
-    //     }
-    //     cmhdr = CMSG_NXTHDR(&env.r_data.msg, cmhdr);
-    // }
-    // printf("tos  = %c\n", tos);
-
-    // t_ip_header test;
-    // retrieve_ip_info(&(env.icmp_res.data[0]), &(test));
-    // display_ip_header_info(test, "ERROR");
-
-
-
-    // verify_icmp_response(env.icmp_res);
 
 
 
@@ -244,10 +187,3 @@ int main(int argc, char** argv)
 
 
 }
-
-/*     uint8_t type;
-    uint8_t code;
-    uint16_t checksum;
-    uint16_t id;
-    uint16_t sequence;
-    uint64_t ts; */
