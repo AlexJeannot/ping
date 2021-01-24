@@ -87,3 +87,38 @@ void set_time()
     env.timeout = 1;
     env.ts_before = get_ts_ms();
 }
+
+float calcul_stddev(float average)
+{
+    double sum;
+    int count;
+    float comp;
+    float sqrt;
+
+    count = 0;
+    sum = 0;
+    comp = 0;
+    while (count < env.stats.count)
+    {
+        env.stats.interval_array[count] -= average;
+        env.stats.interval_array[count] *= env.stats.interval_array[count];
+        sum += (double)env.stats.interval_array[count];
+        count++;
+    }
+    sum /= env.stats.count;
+    sqrt = sum / 2;
+    while (sqrt != comp)
+    {
+        comp = sqrt;
+        sqrt = (sum/comp + comp) / 2;
+    }
+    return (sqrt);
+}
+
+void clear_ressources(void)
+{
+    if (env.stats.interval_array)
+        free(env.stats.interval_array);
+    close(env.sockfd);
+    freeaddrinfo(env.addr);
+}

@@ -19,8 +19,19 @@ typedef struct s_args
     char error_msg[1024];
     int verbose;
     int ttl;
+    int counter;
     char *hostname;
 } t_args;
+
+typedef struct s_stats
+{
+    int count;
+    float min;
+    float max;
+    double sum;
+    float *interval_array;
+    int alloc_interval;
+} t_stats;
 
 typedef struct s_ip_header
 {
@@ -74,9 +85,9 @@ typedef struct s_env
     t_reception r_data;
     long double ts_before;
     long double ts_after;
+    float interval;
     int r_ttl;
-    float interval_min;
-    float interval_max;
+    t_stats stats;
 
 } t_env;
 
@@ -107,5 +118,7 @@ void display_wrong_option(char option);
 void display_error();
 void display_ping(int bytes);
 void display_summary(void);
+float calcul_stddev(float average);
+void clear_ressources(void);
 
 #endif

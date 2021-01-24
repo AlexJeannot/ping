@@ -3,6 +3,7 @@
 void display_help(int exit_code)
 {
     printf("HELP TO DO");
+    clear_ressources();
     exit(exit_code);
 }
 
@@ -34,15 +35,18 @@ void display_error()
 
 void display_ping(int bytes)
 {
-    long double interval;
-
-    interval = (env.ts_after - env.ts_before);
-    printf("%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3Lf ms\n", bytes, env.r_data.s_host, env.r_data.s_addr, env.icmp_req.seq, env.r_ttl, interval);
+    printf("%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3f ms\n", bytes, env.r_data.s_host, env.r_data.s_addr, env.icmp_req.seq, env.r_ttl, env.interval);
+    if (env.args.counter && env.stats.count == env.args.counter)
+        display_summary();
 }
 
 void display_summary(void)
 {
+    float average;
+
+    average = (float)(env.stats.sum / env.stats.count);
     printf("\n--- %s ping statistics ---\n", env.args.hostname);
-    printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", 1.1, 2.2, 3.3, 4.4);
+    printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", env.stats.min, average, env.stats.max, calcul_stddev(average));
+    clear_ressources();
     exit(0);
 }

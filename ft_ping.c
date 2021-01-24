@@ -100,6 +100,41 @@ void manage_signal(void)
     signal(SIGQUIT, &signal_handler);
 }
 
+void reserve_interval_array(int nb)
+{
+    float *new_array;
+    int count;
+
+    count = 0;
+    if (!(new_array = (float*)malloc(sizeof(float) * nb)))
+        error_exit("Interval array memory allocation");
+    if (env.stats.interval_array)
+    {
+        while (count < env.stats.alloc_interval)
+        {
+            new_array[count] = env.stats.interval_array[count];
+            count++;
+        }
+        free(env.stats.interval_array);
+    }
+    env.stats.interval_array = new_array;
+    env.stats.alloc_interval += nb;
+}
+
+void set_stats(void)
+{
+    env.interval = (float)(env.ts_after - env.ts_before);
+    env.stats.count++;
+    if (env.interval < env.stats.min || env.stats.min == 0)
+        env.stats.min = env.interval;
+    if (env.interval > env.stats.max || env.stats.min == 0)
+        env.stats.max = env.interval;
+    env.stats.sum += env.interval;
+    if (env.stats.count  > env.stats.alloc_interval)
+        reserve_interval_array(25);
+    env.stats.interval_array[env.stats.count - 1] = env.interval;
+}
+
 int main(int argc, char** argv)
 {
     bzero(&env, sizeof(env));
@@ -107,6 +142,7 @@ int main(int argc, char** argv)
     get_addr();
     display_addr_info(env.addr);
     manage_signal();
+    reserve_interval_array(25);
     set_socket();
     set_icmp_req();
     set_reception_struct();
@@ -128,6 +164,7 @@ int main(int argc, char** argv)
         retrieve_icmp_info(&(env.r_data.m_data[env.ip_res.header_size * 4]), &(env.icmp_res), (retrecv - (env.ip_res.header_size * 4)));
 
         retrieve_info();
+        set_stats();
         display_ping((retrecv - (env.ip_res.header_size * 4)));
         set_next_ping();
         while (env.timeout) ;
