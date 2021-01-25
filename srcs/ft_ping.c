@@ -1,4 +1,4 @@
-#include "ft_ping.h"
+#include "../inc/ft_ping.h"
 
 uint16_t calcul_checksum(void *data, int size)
 {
@@ -86,9 +86,11 @@ void retrieve_info(void)
 
 void set_timeout_and_ts(void)
 {
-    alarm(5);
+    alarm(1);
     env.timeout = 1;
     env.ts_before = get_ts_ms();
+    if (env.stats.count == 0)
+        env.ts_start = env.ts_before;
 }
 
 void set_next_ping(void)
@@ -143,34 +145,36 @@ void set_stats(void)
     env.stats.interval_array[env.stats.count - 1] = env.interval;
 }
 
-int main(int argc, char** argv)
+void manage_send_failure(void)
 {
-    bzero(&env, sizeof(env));
-    parse_args(argc, argv);
-    get_addr();
-    display_addr_info(env.addr);
-    manage_signal();
-    reserve_interval_array(25);
-    set_socket();
-    set_icmp_req();
-    set_reception_struct();
+    printf("ICMP echo request icmp_seq=%d ttl=%d to %s failed\n", env.icmp_req.seq, env.ttl, env.args.hostname);
+    env.stats.count++;
+    env.stats.error++;    
+    set_next_ping();
+}
 
+void ping_loop(void)
+{
+    int retsend;
+    int retrecv;
+
+    display_introduction();
     while (1)
     {
         set_timeout_and_ts();
-        int retsend = sendto(env.sockfd, &(env.icmp_req), sizeof(env.icmp_req), 0, (env.addr->ai_addr), env.addr->ai_addrlen);
-        printf("retsend = %d\n", retsend);
-        int retrecv;
-        if ((retrecv = recvmsg(env.sockfd, &(env.r_data.msg), MSG_ERRQUEUE)) < 0)  //MSG_WAITALL MSG_ERRQUEUE
+        if ((retsend = sendto(env.sockfd, &(env.icmp_req), sizeof(env.icmp_req), 0, (env.addr->ai_addr), env.addr->ai_addrlen)) < 0)
+        {
+            manage_send_failure();
+            continue;
+        }
+        if ((retrecv = recvmsg(env.sockfd, &(env.r_data.msg), MSG_WAITALL)) < 0)  //MSG_WAITALL MSG_ERRQUEUE
         {
             if (errno == EAGAIN)
                 printf("EAGAIN\n");
-            
+            perror("Error recv: ");
         }
 
         printf("retrecv = %d\n", retrecv);
-        if (retrecv == -1)
-            perror("Error recv: ");
 
         env.ts_after = get_ts_ms();
 
@@ -183,5 +187,19 @@ int main(int argc, char** argv)
         set_next_ping();
         while (env.timeout) ;
     }
+}
+
+int main(int argc, char** argv)
+{
+    bzero(&env, sizeof(env));
+    parse_args(argc, argv);
+    get_addr();
+    display_addr_info(env.addr);
+    manage_signal();
+    reserve_interval_array(25);
+    set_socket();
+    set_icmp_req();
+    set_reception_struct();
+    ping_loop();
     return (0);
 }

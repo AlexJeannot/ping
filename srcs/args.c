@@ -1,4 +1,4 @@
-#include "ft_ping.h"
+#include "../inc/ft_ping.h"
 
 int parse_ttl(char *current_arg, char *next_arg)
 {

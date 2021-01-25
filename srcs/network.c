@@ -1,4 +1,4 @@
-#include "ft_ping.h"
+#include "../inc/ft_ping.h"
 
 void get_addr()
 {
@@ -11,7 +11,8 @@ void get_addr()
     hints.ai_protocol = IPPROTO_ICMP;
 
     if ((ret = getaddrinfo(env.args.hostname, NULL, &hints, &(env.addr))) != 0)
-        error_exit("getaddrinfo");
+        getaddr_error(env.args.hostname, ret);
+
 }
 
 void set_socket()
@@ -26,15 +27,6 @@ void set_socket()
         env.ttl = 64;
     if ((setsockopt(env.sockfd, 0, IP_TTL, &(env.ttl), sizeof(env.ttl))) < 0)
         error_exit("socket TTL setup");
-
-    // int off;
-    // off = 30;
-    // struct timeval tv = {
-    //     .tv_sec = 120
-    // };
-    
-    // if ((setsockopt(env.sockfd, SOL_SOCKET, SO_RCVTIMEO, &(tv), sizeof(tv))) < 0)
-    //     error_exit("socket TO setup");
 
     // TODO ON LINUX
     if ((setsockopt(env.sockfd, 0, IP_RECVERR, &(on), sizeof(on))) < 0)

@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <signal.h>
-#include "./libft/libft.h"
+#include "../libft/libft.h"
 #include <netinet/ip_icmp.h>
 
 struct sock_extended_err
@@ -39,6 +39,7 @@ typedef struct s_args
 typedef struct s_stats
 {
     int count;
+    int error;
     float min;
     float max;
     double sum;
@@ -98,6 +99,7 @@ typedef struct s_env
     t_reception r_data;
     long double ts_before;
     long double ts_after;
+    long double ts_start;
     float interval;
     int r_ttl;
     t_stats stats;
@@ -133,5 +135,7 @@ void display_ping(int bytes);
 void display_summary(void);
 float calcul_stddev(float average);
 void clear_ressources(void);
+void getaddr_error(char *target, int error_code);
+void display_introduction(void);
 
 #endif

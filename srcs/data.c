@@ -1,4 +1,4 @@
-#include "ft_ping.h"
+#include "../inc/ft_ping.h"
 
 void set_icmp_req(void)
 {

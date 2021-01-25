@@ -1,8 +1,8 @@
-#include "ft_ping.h"
+#include "../inc/ft_ping.h"
 
 void display_help(int exit_code)
 {
-    printf("HELP TO DO");
+    printf("Usage: ft_ping [-hv] [-c count] [-t ttl]\n");
     clear_ressources();
     exit(exit_code);
 }
@@ -33,6 +33,15 @@ void display_error()
     printf("From %s icmp_seq=%d %s\n", "TEST", env.icmp_res.seq, error_msg);
 }
 
+void display_introduction(void)
+{
+    char ip_addr[INET_ADDRSTRLEN];
+
+    bzero(&(ip_addr[0]), sizeof(ip_addr));
+    inet_ntop(AF_INET, &(((struct sockaddr_in*)env.addr->ai_addr)->sin_addr), &(ip_addr[0]), INET_ADDRSTRLEN);
+    printf("PING %s (%s) 56(84) bytes of data.", env.args.hostname, ip_addr);
+}
+
 void display_ping(int bytes)
 {
     printf("%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3f ms\n", bytes, env.r_data.s_host, env.r_data.s_addr, env.icmp_req.seq, env.r_ttl, env.interval);
@@ -43,9 +52,16 @@ void display_ping(int bytes)
 void display_summary(void)
 {
     float average;
+    int percentage;
+    int received;
+    int duration;
 
     average = (float)(env.stats.sum / env.stats.count);
+    percentage = env.stats.error / env.stats.count;
+    received = env.stats.count - env.stats.error;
+    duration = (int)(get_ts_ms() - env.ts_start);
     printf("\n--- %s ping statistics ---\n", env.args.hostname);
+    printf("%d packets transmitted, %d received, %d%% packet loss, time %dms\n", env.stats.count, received, percentage, duration);
     printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", env.stats.min, average, env.stats.max, calcul_stddev(average));
     clear_ressources();
     exit(0);

@@ -9,16 +9,15 @@ RM = rm -rf
 
 # DIRECTORIES
 
-DHEADERS = ./inc/
 DSRCS	= ./srcs/
 DOBJS	= ./comp/
 
 
-HEADERS = ft_ping.h
+HEADERS = ./inc/ft_ping.h
 # SOURCES
 
 SRCS = ft_ping.c network.c data.c annexes.c display.c error.c args.c
-OBJS = $(SRCS:%.cpp=$(DOBJS)%.o)
+OBJS = $(SRCS:%.c=$(DOBJS)%.o)
 
 
 
@@ -30,9 +29,7 @@ all: $(NAME)
 make_libft:
 	cd libft && make
 
-
 $(NAME): make_libft $(OBJS) $(HEADERS)
-
 	$(CC) $(OBJS) -o $(NAME) libft/libft.a
 
 $(OBJS): | $(DOBJS) # https://www.gnu.org/software/make/manual/make.html
@@ -40,7 +37,7 @@ $(OBJS): | $(DOBJS) # https://www.gnu.org/software/make/manual/make.html
 $(DOBJS):
 	mkdir $(DOBJS)
 
-$(DOBJS)%.o: $(DSRCS)%.cpp
+$(DOBJS)%.o: $(DSRCS)%.c
 	$(CC) -c $< -o $@
 
 test: all
