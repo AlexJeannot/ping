@@ -13,6 +13,19 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #include "./libft/libft.h"
+#include <netinet/ip_icmp.h>
+
+struct sock_extended_err
+{
+    uint32_t ee_errno;   /* numéro d'erreur */
+    uint8_t  ee_origin;  /* origine de l'erreur */
+    uint8_t  ee_type;    /* type */
+    uint8_t  ee_code;    /* code */
+    uint8_t  ee_pad;     /* remplissage */
+    uint32_t ee_info;    /* données supplémentaires */
+    uint32_t ee_data;    /* autres données */
+    /* Des données supplémentaires peuvent suivre */
+};
 
 typedef struct s_args
 {

@@ -21,8 +21,8 @@ int parse_ttl(char *current_arg, char *next_arg)
     }
     else
         error_exit("option requires an argument -- t");
-    if ((env.ttl = atoi(arg)) < 1)
-        error_exit("invalid TTL: must be > 0");
+    if ((env.ttl = atoi(arg)) < 1 || (env.ttl = atoi(arg)) > 255)
+        error_exit("invalid TTL: invalid value");
     env.args.ttl = 1;
     return (current_arg[0] ? 0 : 1);
 }
@@ -82,10 +82,8 @@ int parse_options(char *option, char* next_arg)
 void parse_args(int argc, char **argv)
 {
     int pos;
-    int count;
 
     pos = 1;
-    count = 0;
     if (argc < 2)
         display_help(1);
     while (pos < argc)

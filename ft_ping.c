@@ -32,16 +32,17 @@ void signal_handler(int code)
 
 void retrieve_info(void)
 {
-    // struct sock_extended_err *pkt;
+    struct sock_extended_err *pkt;
     int *ttl;
     struct cmsghdr *cmsg;
 
     bzero(&(cmsg), sizeof(cmsg));
     ttl = NULL;
     cmsg = CMSG_FIRSTHDR(&(env.r_data.msg));
+    pkt = NULL;
 
     if (getnameinfo(env.r_data.msg.msg_name, env.r_data.msg.msg_namelen, &env.r_data.s_host[0], sizeof(env.r_data.s_host), NULL, 0, 0) != 0)
-        ft_strlcpy(&(env.r_data.s_host[0]), "N/A", 3);
+        ft_strlcpy(&(env.r_data.s_host[0]), "N/A", 4);
 
     inet_ntop(AF_INET, &(env.r_data.s_addr_in.sin_addr), env.r_data.s_addr, INET_ADDRSTRLEN);
 
@@ -55,30 +56,37 @@ void retrieve_info(void)
             ttl = ((int *)CMSG_DATA(cmsg));
         }
         //TODO ON LINUX
-        // if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_RECVERR)
-        // {
-        //     pkt = ((struct sock_extended_err *)CMSG_DATA(cmsg));
-        // }
+        if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_RECVERR)
+        {
+            pkt = ((struct sock_extended_err *)CMSG_DATA(cmsg));
+        }
         cmsg = CMSG_NXTHDR(&(env.r_data.msg), cmsg);
     }
     if (ttl)
         env.r_ttl = *ttl;
     //TODO ON LINUX
-    // if (pkt)
-    // {
-    //     printf ("ee_errno = %d", pkt->ee_errno);
-    //     printf ("ee_origin = %d", pkt->ee_origin);
-    //     printf ("ee_type = %d", pkt->ee_type);
-    //     printf ("ee_code = %d", pkt->ee_code);
-    //     printf ("ee_pad = %d", pkt->ee_pad);
-    //     printf ("ee_info = %d", pkt->ee_info);
-    //     printf ("ee_data = %d", pkt->ee_data);
-    // }
+    if (pkt)
+    {
+        printf("------------\n");
+        printf ("ee_errno = %d\n", pkt->ee_errno);
+        printf ("ee_origin = %d\n", pkt->ee_origin);
+        printf ("ee_type = %d\n", pkt->ee_type);
+        printf ("ee_code = %d\n", pkt->ee_code);
+        printf ("ee_pad = %d\n", pkt->ee_pad);
+        printf ("ee_info = %d\n", pkt->ee_info);
+        printf ("ee_data = %d\n", pkt->ee_data);
+        printf("------------\n");
+        if (pkt->ee_origin == 2)
+        {
+            printf("ERROR FROM ICMP\n");
+
+        }
+    }
 }
 
 void set_timeout_and_ts(void)
 {
-    alarm(1);
+    alarm(5);
     env.timeout = 1;
     env.ts_before = get_ts_ms();
 }
@@ -96,8 +104,8 @@ void set_next_ping(void)
 void manage_signal(void)
 {
     signal(SIGALRM, &signal_handler);
-    signal(SIGINT, &signal_handler);
-    signal(SIGQUIT, &signal_handler);
+    // signal(SIGINT, &signal_handler);
+    // signal(SIGQUIT, &signal_handler);
 }
 
 void reserve_interval_array(int nb)
@@ -152,7 +160,13 @@ int main(int argc, char** argv)
         set_timeout_and_ts();
         int retsend = sendto(env.sockfd, &(env.icmp_req), sizeof(env.icmp_req), 0, (env.addr->ai_addr), env.addr->ai_addrlen);
         printf("retsend = %d\n", retsend);
-        int retrecv = recvmsg(env.sockfd, &(env.r_data.msg), MSG_WAITALL);
+        int retrecv;
+        if ((retrecv = recvmsg(env.sockfd, &(env.r_data.msg), MSG_ERRQUEUE)) < 0)  //MSG_WAITALL MSG_ERRQUEUE
+        {
+            if (errno == EAGAIN)
+                printf("EAGAIN\n");
+            
+        }
 
         printf("retrecv = %d\n", retrecv);
         if (retrecv == -1)
@@ -160,12 +174,12 @@ int main(int argc, char** argv)
 
         env.ts_after = get_ts_ms();
 
-        retrieve_ip_info(&(env.r_data.m_data[0]), &(env.ip_res));
-        retrieve_icmp_info(&(env.r_data.m_data[env.ip_res.header_size * 4]), &(env.icmp_res), (retrecv - (env.ip_res.header_size * 4)));
+        // retrieve_ip_info(&(env.r_data.m_data[0]), &(env.ip_res));
+        // retrieve_icmp_info(&(env.r_data.m_data[env.ip_res.header_size * 4]), &(env.icmp_res), (retrecv - (env.ip_res.header_size * 4)));
 
         retrieve_info();
         set_stats();
-        display_ping((retrecv - (env.ip_res.header_size * 4)));
+        display_ping((retrecv - 20)); //(env.ip_res.header_size * 4
         set_next_ping();
         while (env.timeout) ;
     }
