@@ -24,14 +24,14 @@ uint16_t calcul_checksum(void *data, int size)
 
 void retrieve_info(void)
 {
-    struct sock_extended_err *pkt;
+    // struct sock_extended_err *pkt;
     int *ttl;
     struct cmsghdr *cmsg;
 
     bzero(&(cmsg), sizeof(cmsg));
     ttl = NULL;
     cmsg = CMSG_FIRSTHDR(&(env.r_data.msg));
-    pkt = NULL;
+    // pkt = NULL;
 
     if (getnameinfo(env.r_data.msg.msg_name, env.r_data.msg.msg_namelen, &env.r_data.s_host[0], sizeof(env.r_data.s_host), NULL, 0, 0) != 0)
         ft_strlcpy(&(env.r_data.s_host[0]), "N/A", 4);
@@ -39,7 +39,7 @@ void retrieve_info(void)
     inet_ntop(AF_INET, &(env.r_data.s_addr_in.sin_addr), env.r_data.s_addr, INET_ADDRSTRLEN);
 
 
-    printf("cmsg->cmsg_level = %d ----- cmsg->cmsg_type = %d\n", cmsg->cmsg_level, cmsg->cmsg_type);
+    printf(">>> cmsg->cmsg_level = %d ----- cmsg->cmsg_type = %d\n", cmsg->cmsg_level, cmsg->cmsg_type);
     while (cmsg)
     {
         printf("cmsg->cmsg_level = %d ----- cmsg->cmsg_type = %d\n", cmsg->cmsg_level, cmsg->cmsg_type);
@@ -48,32 +48,32 @@ void retrieve_info(void)
             ttl = ((int *)CMSG_DATA(cmsg));
         }
         //TODO ON LINUX
-        if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_RECVERR)
-        {
-            pkt = ((struct sock_extended_err *)CMSG_DATA(cmsg));
-        }
+        // if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_RECVERR)
+        // {
+        //     pkt = ((struct sock_extended_err *)CMSG_DATA(cmsg));
+        // }
         cmsg = CMSG_NXTHDR(&(env.r_data.msg), cmsg);
     }
     if (ttl)
         env.r_ttl = *ttl;
     //TODO ON LINUX
-    if (pkt)
-    {
-        printf("------------\n");
-        printf ("ee_errno = %d\n", pkt->ee_errno);
-        printf ("ee_origin = %d\n", pkt->ee_origin);
-        printf ("ee_type = %d\n", pkt->ee_type);
-        printf ("ee_code = %d\n", pkt->ee_code);
-        printf ("ee_pad = %d\n", pkt->ee_pad);
-        printf ("ee_info = %d\n", pkt->ee_info);
-        printf ("ee_data = %d\n", pkt->ee_data);
-        printf("------------\n");
-        if (pkt->ee_origin == 2)
-        {
-            printf("ERROR FROM ICMP\n");
+    // if (pkt)
+    // {
+    //     printf("------------\n");
+    //     printf ("ee_errno = %d\n", pkt->ee_errno);
+    //     printf ("ee_origin = %d\n", pkt->ee_origin);
+    //     printf ("ee_type = %d\n", pkt->ee_type);
+    //     printf ("ee_code = %d\n", pkt->ee_code);
+    //     printf ("ee_pad = %d\n", pkt->ee_pad);
+    //     printf ("ee_info = %d\n", pkt->ee_info);
+    //     printf ("ee_data = %d\n", pkt->ee_data);
+    //     printf("------------\n");
+    //     if (pkt->ee_origin == 2)
+    //     {
+    //         printf("ERROR FROM ICMP\n");
 
-        }
-    }
+    //     }
+    // }
 }
 
 void set_timeout_and_ts(void)
@@ -163,17 +163,22 @@ void ping_loop(void)
         printf("env.r_data.msg.msg_flags = %d\n", env.r_data.msg.msg_flags);
 
         printf("retrecv = %d\n", retrecv);
-        struct icmphdr *icmp_response;
-        bzero(&(icmp_response), sizeof(icmp_response));
-        icmp_response = (struct icmphdr *)&env.r_data.m_data[20];
-
-        printf("icmp_response->type = %d\n", icmp_response->type);
         env.ts_after = get_ts_ms();
 
-        // retrieve_ip_info(&(env.r_data.m_data[0]), &(env.ip_res));
+        retrieve_ip_info(&(env.r_data.m_data[0]), &(env.ip_res));
         // retrieve_icmp_info(&(env.r_data.m_data[20]), &(env.icmp_res), (retrecv - (env.ip_res.header_size * 4)));
 
-        retrieve_info();
+        if (retrecv >= 0)
+            retrieve_info();
+
+        t_icmp_header *icmp_response;
+        icmp_response = (t_icmp_header *)&env.r_data.m_data[20];
+        t_ip_header ip_error;
+        retrieve_ip_info(&(env.r_data.m_data[28]), &(ip_error));
+        printf("ip_error->ttl = %d\n", ip_error.ttl);
+
+        printf("icmp_response->type = %d\n", icmp_response->type);
+
         set_stats();
         display_ping((retrecv - 20)); //(env.ip_res.header_size * 4
         set_next_ping();

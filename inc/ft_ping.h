@@ -13,7 +13,7 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #include "../libft/libft.h"
-#include <netinet/ip_icmp.h>
+// #include <netinet/ip_icmp.h>
 
 struct sock_extended_err
 {

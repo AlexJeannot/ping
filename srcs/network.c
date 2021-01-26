@@ -29,8 +29,8 @@ void set_socket()
         error_exit("socket TTL setup");
 
     // TODO ON LINUX
-    if ((setsockopt(env.sockfd, 0, IP_RECVERR, (char*)&(on), sizeof(on))) < 0)
-        error_exit("socket TTL setup");
+    // if ((setsockopt(env.sockfd, 0, IP_RECVERR, (char*)&(on), sizeof(on))) < 0)
+    //     error_exit("socket TTL setup");
 
     on = 1;
     if ((setsockopt(env.sockfd, IPPROTO_IP, IP_RECVTTL, (char*)&(on), sizeof(on))) < 0)
@@ -38,11 +38,11 @@ void set_socket()
 
 
     struct timeval send_to;
-    send_to.tv_sec = 10;
+    send_to.tv_sec = 1;
     send_to.tv_usec = 0;
 
     struct timeval recv_to;
-    recv_to.tv_sec = 10;
+    recv_to.tv_sec = 1;
     recv_to.tv_usec = 0;
 
     if ((setsockopt(env.sockfd, SOL_SOCKET, SO_SNDTIMEO, (char*)&(send_to), sizeof(send_to))) < 0)
