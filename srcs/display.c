@@ -27,7 +27,7 @@ void display_error(int ttl)
 
     error_msg = (env.icmp_res->type == 3) ? dest_error_code[env.icmp_res->code] : ttl_error_code[env.icmp_res->code];
     if (!(env.args.verbose))
-        printf("From %s (%s) icmp_seq=%d ttl=%d: %s\n", env.r_data.s_host, env.r_data.s_addr, env.icmp_req.seq, ttl, error_msg);
+        printf("From %s (%s) icmp_seq=%d: %s\n", env.r_data.s_host, env.r_data.s_addr, env.icmp_req.seq, error_msg);
     else
         printf("From %s (%s) icmp_seq=%d ttl=%d icmp_type=%d icmp_code=%d: %s\n", env.r_data.s_host, env.r_data.s_addr, env.icmp_req.seq, ttl, env.icmp_res->type, env.icmp_res->code, error_msg);
 }
@@ -58,7 +58,10 @@ void display_summary(void)
     received = env.stats.count - env.stats.error;
     duration = (int)(get_ts_ms() - env.ts_start);
     printf("\n--- %s ping statistics ---\n", env.args.hostname);
-    printf("%d packets transmitted, %d received, %d%% packet loss, time %dms\n", env.stats.count, received, percentage, duration);
+    if (!(env.stats.error))
+        printf("%d packets transmitted, %d received, %d%% packet loss, time %dms\n", env.stats.count, received, percentage, duration);
+    else
+        printf("%d packets transmitted, %d received, +%d errors, %d%% packet loss, time %dms\n", env.stats.count, received, env.stats.error, percentage, duration);
     if (env.stats.count != env.stats.error)
         printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", env.stats.min, average, env.stats.max, calcul_stddev(average));
     clear_ressources();

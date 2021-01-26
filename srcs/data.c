@@ -30,7 +30,7 @@ void retrieve_info(void)
 
     while (cmsg)
     {
-        if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_RECVTTL)
+        if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_TTL)
             ttl = ((int *)CMSG_DATA(cmsg));
         cmsg = CMSG_NXTHDR(&(env.r_data.msg), cmsg);
     }
