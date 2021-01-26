@@ -1,4 +1,4 @@
-#include "../inc/ft_ping.h"
+#include "../inc/ping.h"
 
 int parse_ttl(char *current_arg, char *next_arg)
 {
@@ -64,19 +64,19 @@ int parse_options(char *option, char* next_arg)
             env.args.verbose = 1;
         else if (option[count] == 'h')
             display_help(0);
-        else if (option[count] == 't' || option[count] == 'c' || option[count] == 'i')
+        else if (option[count] == 't' || option[count] == 'c')
         {
             if (option[count] == 't')
-                count += parse_ttl(&(option[count + 1]), next_arg);
+                count = parse_ttl(&(option[count + 1]), next_arg);
             else if (option[count] == 'c')
-                count += parse_counter(&(option[count + 1]), next_arg);
-            break;
+                count = parse_counter(&(option[count + 1]), next_arg);
+            return (count);
         }
         else
             display_wrong_option(option[count]);
         count++;
     }
-    return (count);
+    return (0);
 }
 
 void parse_args(int argc, char **argv)
@@ -98,4 +98,6 @@ void parse_args(int argc, char **argv)
         }
         pos++;
     }
+    if (!(env.args.ttl))
+        env.ttl = 64;
 }

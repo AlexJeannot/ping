@@ -95,7 +95,7 @@ typedef struct s_env
     struct addrinfo *addr;
     t_ip_header ip_res;
     t_icmp_header icmp_req;
-    t_icmp_header icmp_res;
+    t_icmp_header *icmp_res;
     t_reception r_data;
     long double ts_before;
     long double ts_after;
@@ -130,12 +130,27 @@ void display_ip_header_info(t_ip_header header, char *name);
 void parse_args(int argc, char **argv);
 void display_help(int exit_code);
 void display_wrong_option(char option);
-void display_error();
+void display_error(int ttl);
 void display_ping(int bytes);
 void display_summary(void);
 float calcul_stddev(float average);
 void clear_ressources(void);
 void getaddr_error(char *target, int error_code);
 void display_introduction(void);
+uint16_t calcul_checksum(void *data, int size);
+void retrieve_info(void);
+void set_stats(void);
+void reserve_interval_array(int nb);
+
+void signal_handler(int code);
+void manage_signal(void);
+
+void manage_recv_sucess(int retrecv);
+void manage_recv_failure(void);
+void manage_send_failure(void);
+
+void set_next_ping(void);
+
+void set_timeout_and_ts(void);
 
 #endif

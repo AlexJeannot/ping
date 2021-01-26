@@ -1,4 +1,4 @@
-#include "../inc/ft_ping.h"
+#include "../inc/ping.h"
 
 void error_exit(char *error_msg)
 {

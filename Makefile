@@ -13,10 +13,10 @@ DSRCS	= ./srcs/
 DOBJS	= ./comp/
 
 
-HEADERS = ./inc/ft_ping.h
+HEADERS = ./inc/ping.h
 # SOURCES
 
-SRCS = ft_ping.c network.c data.c annexes.c display.c error.c args.c
+SRCS = ping.c network.c data.c annexes.c display.c error.c args.c ip.c signal.c icmp.c stats.c io_return.c time.c
 OBJS = $(SRCS:%.c=$(DOBJS)%.o)
 
 
