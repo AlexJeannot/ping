@@ -39,7 +39,7 @@ void display_introduction(void)
 
     bzero(&(ip_addr[0]), sizeof(ip_addr));
     inet_ntop(AF_INET, &(((struct sockaddr_in*)env.addr->ai_addr)->sin_addr), &(ip_addr[0]), INET_ADDRSTRLEN);
-    printf("PING %s (%s) 56(84) bytes of data.", env.args.hostname, ip_addr);
+    printf("PING %s (%s) 56(84) bytes of data.\n", env.args.hostname, ip_addr);
 }
 
 void display_ping(int bytes)

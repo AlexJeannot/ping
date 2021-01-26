@@ -22,14 +22,6 @@ uint16_t calcul_checksum(void *data, int size)
     return ((uint16_t)checksum);
 }
 
-void signal_handler(int code)
-{
-    if (code == SIGALRM)
-        env.timeout = 0;
-    if (code == SIGINT || code == SIGQUIT)
-        display_summary();
-}
-
 void retrieve_info(void)
 {
     struct sock_extended_err *pkt;
@@ -95,19 +87,12 @@ void set_timeout_and_ts(void)
 
 void set_next_ping(void)
 {
-    env.icmp_req.seq++;
     bzero(&env.ts_before, sizeof(env.ts_before));
     bzero(&env.ts_after, sizeof(env.ts_after));
     bzero(&(env.icmp_req.checksum), sizeof(env.icmp_req.checksum));
+    env.icmp_req.seq++;
     env.icmp_req.checksum = calcul_checksum(&(env.icmp_req), sizeof(env.icmp_req));
     set_reception_struct();
-}
-
-void manage_signal(void)
-{
-    signal(SIGALRM, &signal_handler);
-    // signal(SIGINT, &signal_handler);
-    // signal(SIGQUIT, &signal_handler);
 }
 
 void reserve_interval_array(int nb)
@@ -158,28 +143,35 @@ void ping_loop(void)
     int retsend;
     int retrecv;
 
-    display_introduction();
     while (1)
     {
         set_timeout_and_ts();
+        printf("BEFORE SEND\n");
         if ((retsend = sendto(env.sockfd, &(env.icmp_req), sizeof(env.icmp_req), 0, (env.addr->ai_addr), env.addr->ai_addrlen)) < 0)
         {
+            printf("SNED FAILED\n");
             manage_send_failure();
             continue;
         }
+        printf("AFTER SEND\n");
         if ((retrecv = recvmsg(env.sockfd, &(env.r_data.msg), MSG_WAITALL)) < 0)  //MSG_WAITALL MSG_ERRQUEUE
         {
             if (errno == EAGAIN)
                 printf("EAGAIN\n");
             perror("Error recv: ");
         }
+        printf("env.r_data.msg.msg_flags = %d\n", env.r_data.msg.msg_flags);
 
         printf("retrecv = %d\n", retrecv);
+        struct icmphdr *icmp_response;
+        bzero(&(icmp_response), sizeof(icmp_response));
+        icmp_response = (struct icmphdr *)&env.r_data.m_data[20];
 
+        printf("icmp_response->type = %d\n", icmp_response->type);
         env.ts_after = get_ts_ms();
 
         // retrieve_ip_info(&(env.r_data.m_data[0]), &(env.ip_res));
-        // retrieve_icmp_info(&(env.r_data.m_data[env.ip_res.header_size * 4]), &(env.icmp_res), (retrecv - (env.ip_res.header_size * 4)));
+        // retrieve_icmp_info(&(env.r_data.m_data[20]), &(env.icmp_res), (retrecv - (env.ip_res.header_size * 4)));
 
         retrieve_info();
         set_stats();
@@ -187,6 +179,24 @@ void ping_loop(void)
         set_next_ping();
         while (env.timeout) ;
     }
+}
+
+void signal_handler(int code)
+{
+    if (code == SIGALRM)
+    {
+        printf("SIGALARM\n");
+        env.timeout = 0;
+    }
+    if (code == SIGINT || code == SIGQUIT)
+        display_summary();
+}
+
+void manage_signal(void)
+{
+    signal(SIGALRM, &signal_handler);
+    // signal(SIGINT, &signal_handler);
+    // signal(SIGQUIT, &signal_handler);
 }
 
 int main(int argc, char** argv)
@@ -200,6 +210,7 @@ int main(int argc, char** argv)
     set_socket();
     set_icmp_req();
     set_reception_struct();
+    display_introduction();
     ping_loop();
     return (0);
 }

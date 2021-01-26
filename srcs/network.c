@@ -25,16 +25,34 @@ void set_socket()
 
     if (!(env.args.ttl))
         env.ttl = 64;
-    if ((setsockopt(env.sockfd, 0, IP_TTL, &(env.ttl), sizeof(env.ttl))) < 0)
+    if ((setsockopt(env.sockfd, 0, IP_TTL, (char*)&(env.ttl), sizeof(env.ttl))) < 0)
         error_exit("socket TTL setup");
 
     // TODO ON LINUX
-    if ((setsockopt(env.sockfd, 0, IP_RECVERR, &(on), sizeof(on))) < 0)
+    if ((setsockopt(env.sockfd, 0, IP_RECVERR, (char*)&(on), sizeof(on))) < 0)
         error_exit("socket TTL setup");
 
     on = 1;
-    if ((setsockopt(env.sockfd, 0, IP_RECVTTL, &(on), sizeof(on))) < 0)
+    if ((setsockopt(env.sockfd, IPPROTO_IP, IP_RECVTTL, (char*)&(on), sizeof(on))) < 0)
         error_exit("socket TTL setup");
 
+
+    struct timeval send_to;
+    send_to.tv_sec = 10;
+    send_to.tv_usec = 0;
+
+    struct timeval recv_to;
+    recv_to.tv_sec = 10;
+    recv_to.tv_usec = 0;
+
+    if ((setsockopt(env.sockfd, SOL_SOCKET, SO_SNDTIMEO, (char*)&(send_to), sizeof(send_to))) < 0)
+        error_exit("socket TTL setup");
+
+    if ((setsockopt(env.sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&(recv_to), sizeof(recv_to))) < 0)
+        error_exit("socket TTL setup");
+
+    // on = 1;
+    // if ((setsockopt(env.sockfd, 0, IP_HDRINCL, &(on), sizeof(on))) < 0)
+    //     error_exit("socket TTL setup");
 }
 
