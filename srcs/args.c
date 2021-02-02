@@ -1,5 +1,9 @@
 #include "../inc/ping.h"
 
+/*
+ * Parsing of ttl option (-t)
+ * next_arg is used if '-t 42' != '-t42'
+*/ 
 int	parse_ttl(char *current_arg, char *next_arg)
 {
 	int	count;
@@ -27,6 +31,10 @@ int	parse_ttl(char *current_arg, char *next_arg)
 	return (current_arg[0] ? 0 : 1);
 }
 
+/*
+ * Parsing of counter option (-c)
+ * next_arg is used if '-c 42' != '-c42'
+*/ 
 int	parse_counter(char *current_arg, char *next_arg)
 {
 	int	count;
@@ -53,6 +61,9 @@ int	parse_counter(char *current_arg, char *next_arg)
 	return (current_arg[0] ? 0 : 1);
 }
 
+/*
+ * Parsing of options (beginning by an -)
+*/ 
 int	parse_options(char *option, char* next_arg)
 {
 	int	count;
@@ -79,6 +90,9 @@ int	parse_options(char *option, char* next_arg)
 	return (0);
 }
 
+/*
+ * Parsing of all arguments (options and hostname)
+*/ 
 void	parse_args(int argc, char **argv)
 {
 	int	pos;

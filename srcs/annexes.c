@@ -1,12 +1,15 @@
 #include "../inc/ping.h"
 
+/*
+ * Purpose is to allocate an array of float for statistics 
+*/ 
 void	reserve_interval_array(int nb)
 {
 	float	*new_array;
-	int	count;
+	int		count;
 
 	count = 0;
-	if (!(new_array = (float*)malloc(sizeof(float) * nb)))
+	if (!(new_array = (float*)malloc(sizeof(float) * (nb + env.stats.alloc_interval))))
 		error_exit("Interval array memory allocation");
 	if (env.stats.interval_array)
 	{
@@ -21,6 +24,9 @@ void	reserve_interval_array(int nb)
 	env.stats.alloc_interval += nb;
 }
 
+/*
+ * Cleaning of ressources used
+*/ 
 void	clear_ressources(void)
 {
 	if (env.stats.interval_array)

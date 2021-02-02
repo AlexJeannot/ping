@@ -1,5 +1,8 @@
 #include "../inc/ping.h"
 
+/*
+ * If sendto() failed then announce it and prepare for next ping
+*/ 
 void	manage_send_failure(void)
 {
 	printf("ICMP echo request icmp_seq=%d ttl=%d to %s failed\n", env.icmp_req.seq, env.ttl, env.args.hostname);
@@ -8,6 +11,9 @@ void	manage_send_failure(void)
 	set_next_ping();
 }
 
+/*
+ * If recvmsg() failed then announce timeout
+*/ 
 void	manage_recv_failure(void)
 {
 	env.stats.error++;
@@ -16,6 +22,9 @@ void	manage_recv_failure(void)
 		printf("Request timeout for icmp_seq=%d\n", env.icmp_req.seq);
 }
 
+/*
+ * If error code in icmp reply then process and display it
+*/ 
 void	manage_reply_error(void)
 {
 	t_ip_header	ip_error;
@@ -26,6 +35,9 @@ void	manage_reply_error(void)
 	env.stats.count++;
 }
 
+/*
+ * If ping succeeded then display information
+*/ 
 void	manage_recv_sucess(int retrecv)
 {
 	retrieve_info();

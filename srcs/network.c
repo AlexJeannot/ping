@@ -1,9 +1,16 @@
 #include "../inc/ping.h"
 
-void	get_addr()
+/*
+ * Find target corresponding to
+ * -> Hostname (IP adress OR Fully qualified domain name)
+ * -> IP version
+ * -> Socket type
+ * -> Protocole
+*/
+void	get_addr(void)
 {
-	struct	addrinfo hints;
-	int	ret;
+	struct addrinfo	hints;
+	int				ret;
 
 	bzero(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -13,11 +20,19 @@ void	get_addr()
 		getaddr_error(env.args.hostname, ret);
 }
 
-void	set_socket()
+/*
+ * Create and set socket with options
+ * -> Create raw / IPv4 family / ICMP socket
+ * -> Set IP_RECVTTL to retrieve TTL with cmsghdr struct
+ * -> Set icmp request TTL
+ * -> Set send TO
+ * -> Set recv TO
+*/
+void	set_socket(void)
 {
-	struct	timeval send_to;
-	struct	timeval recv_to;
-	int	on;
+	struct timeval	send_to;
+	struct timeval	recv_to;
+	int				on;
 
 	send_to.tv_sec = 1;
 	send_to.tv_usec = 0;

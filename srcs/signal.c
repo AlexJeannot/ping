@@ -1,5 +1,10 @@
 #include "../inc/ping.h"
 
+/*
+ * Signals handler function
+ * SIGALRM is use for timer
+ * SIGINT and SIGQUIT display stastitics summary and exit program 
+*/
 void	signal_handler(int code)
 {
 	if (code == SIGALRM)
@@ -8,6 +13,9 @@ void	signal_handler(int code)
 		display_summary();
 }
 
+/*
+ * Set signal manager
+*/
 void	manage_signal(void)
 {
 	signal(SIGALRM, &signal_handler);

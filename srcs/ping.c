@@ -1,5 +1,13 @@
 #include "../inc/ping.h"
 
+/*
+ * Ping loop
+ * Set alarm and start TS
+ * send cimp request
+ * receive icmp reply and handle error or response
+ * Prepare next ping
+ * Wait for alarm signal (would use sleep function for 42's subject)
+*/
 void	ping_loop(void)
 {
 	int	retsend;
@@ -22,6 +30,10 @@ void	ping_loop(void)
 	}
 }
 
+/*
+ * Main function
+ * Setup everything and call ping loop
+*/
 int	main(int argc, char** argv)
 {
 	bzero(&env, sizeof(env));

@@ -1,11 +1,14 @@
 #include "../inc/ping.h"
 
+/*
+ * Calcul standard deviation
+*/
 float	calcul_stddev(float average)
 {
 	double	sum;
-	int	count;
 	float	comp;
 	float	sqrt;
+	int		count;
 
 	count = 0;
 	sum = 0;
@@ -24,11 +27,20 @@ float	calcul_stddev(float average)
 	while (sqrt != comp)
 	{
 		comp = sqrt;
-		sqrt = (sum/comp + comp) / 2;
+		sqrt = (sum / comp + comp) / 2;
 	}
 	return (sqrt);
 }
 
+/*
+ * Update stats after each ping
+ * Calcul interval between request and reply (ms)
+ * Set minimal interval if needed
+ * Set maximal interval if needed
+ * Add interval to interval's sum (for average)
+ * Alloc more space if needed
+ * Add interval to interval array (for standard deviation)
+*/
 void	set_stats(void)
 {
 	env.interval = (float)(env.ts_after - env.ts_before);

@@ -1,5 +1,10 @@
 #include "../inc/ping.h"
 
+/*
+ * Exit if error
+ * -> Display error message
+ * -> clear ressources used
+*/ 
 void	error_exit(char *error_msg)
 {
 	fprintf(stderr, "ft_ping: %s\n", error_msg);
@@ -7,9 +12,12 @@ void	error_exit(char *error_msg)
 	exit(1);
 }
 
+/*
+ * Prepare error message depending on getaddrinfo return
+*/ 
 void	getaddr_error(char *target, int error_code)
 {
-	char *error;
+	char	*error;
 
 	error = NULL;
 	if (error_code == EAI_NONAME)

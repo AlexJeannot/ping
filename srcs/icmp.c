@@ -1,5 +1,15 @@
 #include "../inc/ping.h"
 
+/*
+ * Checksum calculation
+ * data is adress of first header byte
+ * For every 2 bytes of header 
+ * -> Add 2 bytes value to checksum
+ * If header length is odd
+ * -> Add last byte value to checksum
+ * Add most significant byte and least significant byte
+ * ones complement of checksum
+*/ 
 uint16_t	calcul_checksum(void *data, int size)
 {
 	uint64_t	checksum;
@@ -22,6 +32,13 @@ uint16_t	calcul_checksum(void *data, int size)
 	return ((uint16_t)checksum);
 }
 
+/*
+ * Prepare icmp request
+ * type is 8 (echo request)
+ * code is 0 (echo request) -> already set because of main structure bzero() 
+ * id is pid
+ * set timestamp in data part of icmp request (big endian)
+*/ 
 void	set_icmp_req(void)
 {
 	long	ts;

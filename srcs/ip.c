@@ -1,5 +1,13 @@
 #include "../inc/ping.h"
 
+/*
+ * Retrieve first 32 bits word from ip header
+ * IP version
+ * Header size
+ * Differentiated Services Code Point
+ * Explicit Congestion Notification
+ * Packet size
+*/
 int retrieve_first_word(const char* data, t_ip_header *res, int offset)
 {
     res->version = ((uint8_t)data[offset]);
@@ -21,6 +29,12 @@ int retrieve_first_word(const char* data, t_ip_header *res, int offset)
     return (offset);
 }
 
+/*
+ * Retrieve second 32 bits word from ip header
+ * Identification
+ * Flags
+ * Fragment Offset
+*/
 int retrieve_second_word(const char* data, t_ip_header *res, int offset)
 {
     res->id = ((uint8_t)data[offset++]);
@@ -34,6 +48,12 @@ int retrieve_second_word(const char* data, t_ip_header *res, int offset)
     return (offset);
 }
 
+/*
+ * Retrieve third 32 bits word from ip header
+ * Time To Live
+ * Protocol
+ * Checksum
+*/
 int retrieve_third_word(const char* data, t_ip_header *res, int offset)
 {
     res->ttl = ((uint8_t)data[offset++]);
@@ -45,6 +65,11 @@ int retrieve_third_word(const char* data, t_ip_header *res, int offset)
     return (offset);
 }
 
+/*
+ * Retrieve fourth and fifth 32 bits word from ip header
+ * Source IP adress
+ * Destination IP Adress
+*/
 void retrieve_ip_addr(const char* data, t_ip_header *res, int offset)
 {
     int count;
@@ -66,6 +91,9 @@ void retrieve_ip_addr(const char* data, t_ip_header *res, int offset)
     }
 }
 
+/*
+ * main fonction for IP informations retrieving
+*/ 
 void retrieve_ip_info(const char* data, t_ip_header *res)
 {
     int offset;

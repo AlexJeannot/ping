@@ -1,5 +1,8 @@
 #include "../inc/ping.h"
 
+/*
+ * Display help if needed (-h or wrong argument)
+*/ 
 void	display_help(int exit_code)
 {
 	printf("Usage: ft_ping [-hv] [-c count] [-t ttl]\n");
@@ -7,20 +10,27 @@ void	display_help(int exit_code)
 	exit(exit_code);
 }
 
+/*
+ * Display wrong option message
+*/ 
 void	display_wrong_option(char option)
 {
 	printf("Ping: invalid option -- '%c'\n", option);
 	display_help(1);
 }
 
+/*
+ * Display error retrieve from icmp response depending on type and code
+ * Condition if verbose option (-v) requested
+*/ 
 void	display_error(int ttl)
 {
-	char	*dest_error_code[16] = {"Destination network unreachable", "Destination host unreachable" \
-		"Destination protocol unreachable", "Destination port unreachable" \
-			"Fragmentation required", "Source route failed", "Destination network unknown" \
-			"Destination host unknown", "Source host isolated", "Network administratively prohibited" \
-			"Host administratively prohibited", "Network unreachable for ToS", \
-			"Host unreachable for ToS", "Communication administratively prohibited", \
+	char	*dest_error_code[16] = {"Destination network unreachable", "Destination host unreachable",	\
+			"Destination protocol unreachable", "Destination port unreachable",							\
+			"Fragmentation required", "Source route failed", "Destination network unknown",				\
+			"Destination host unknown", "Source host isolated", "Network administratively prohibited",	\
+			"Host administratively prohibited", "Network unreachable for ToS",							\
+			"Host unreachable for ToS", "Communication administratively prohibited",					\
 			"Host Precedence Violation", "Precedence cutoff in effect"};
 	char	*ttl_error_code[2] = {"Time To Live exceeded", "Fragment reassembly time exceeded"};
 	char	*error_msg;
@@ -32,6 +42,9 @@ void	display_error(int ttl)
 		printf("From %s (%s) icmp_seq=%d ttl=%d icmp_type=%d icmp_code=%d: %s\n", env.r_data.s_host, env.r_data.s_addr, env.icmp_req.seq, ttl, env.icmp_res->type, env.icmp_res->code, error_msg);
 }
 
+/*
+ * Display ping introduction
+*/ 
 void	display_introduction(void)
 {
 	char	ip_addr[INET_ADDRSTRLEN];
@@ -41,17 +54,23 @@ void	display_introduction(void)
 	printf("PING %s (%s) 56(84) bytes of data.\n", env.args.hostname, ip_addr);
 }
 
+/*
+ * Display ping
+*/ 
 void	display_ping(int bytes)
 {
 	printf("%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3f ms\n", bytes, env.r_data.s_host, env.r_data.s_addr, env.icmp_req.seq, env.r_ttl, env.interval);
 }
 
+/*
+ * Display ping summary (statistics)
+*/ 
 void	display_summary(void)
 {
 	float	average;
-	int	percentage;
-	int	received;
-	int	duration;
+	int		percentage;
+	int		received;
+	int		duration;
 
 	average = (float)(env.stats.sum / env.stats.count);
 	percentage = (env.stats.error / env.stats.count) * 100;
