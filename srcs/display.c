@@ -77,7 +77,10 @@ void	display_summary(void)
 	received = env.stats.count - env.stats.error;
     duration = (int)(get_ts_ms() - env.ts_start);
     printf("\n--- %s ping statistics ---\n", env.args.hostname);
-    printf("%d packets transmitted, %d received, %d%% packet loss, time %dms\n", env.stats.count, received, percentage, duration);
+    if (!(env.stats.error))
+        printf("%d packets transmitted, %d received, %d%% packet loss, time %dms\n", env.stats.count, received, percentage, duration);
+    else
+        printf("%d packets transmitted, %d received, +%d errors, %d%% packet loss, time %dms\n", env.stats.count, received, env.stats.error, percentage, duration);
     if (env.stats.count != env.stats.error)
         printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n", env.stats.min, average, env.stats.max, calcul_stddev(average));
     clear_ressources();
